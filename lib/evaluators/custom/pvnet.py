@@ -58,7 +58,7 @@ class Evaluator:
             self.add.append(mean_dist < diameter)
 
     def cm_degree_5_metric(self, pose_pred, pose_targets):
-        translation_distance = np.linalg.norm(pose_pred[:, 3] - pose_targets[:, 3]) * 100
+        translation_distance = np.linalg.norm(pose_pred[:, 3] - pose_targets[:, 3]) #* 100
         rotation_diff = np.dot(pose_pred[:, :3], pose_targets[:, :3].T)
         trace = np.trace(rotation_diff)
         trace = trace if trace <= 3 else 3

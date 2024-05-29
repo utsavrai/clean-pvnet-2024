@@ -1,7 +1,6 @@
 from lib.csrc.fps._ext import lib, ffi
 import numpy as np
 
-
 def farthest_point_sampling(pts, sn, init_center=False):
     pn, _ = pts.shape
     assert(pts.shape[1] == 3)

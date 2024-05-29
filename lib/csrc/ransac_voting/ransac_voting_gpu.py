@@ -33,6 +33,7 @@ def ransac_voting_layer(mask, vertex, round_hyp_num, inlier_thresh=0.999, confid
 
         coords = torch.nonzero(cur_mask).float()  # [tn,2]
         coords = coords[:, [1, 0]]
+        cur_mask = cur_mask.to(torch.bool)
         direct = vertex[bi].masked_select(torch.unsqueeze(torch.unsqueeze(cur_mask, 2), 3))  # [tn,vn,2]
         direct = direct.view([coords.shape[0], vn, 2])
         tn = coords.shape[0]
@@ -103,7 +104,9 @@ def b_inv(b_mat):
     '''
     eye = b_mat.new_ones(b_mat.size(-1)).diag().expand_as(b_mat)
     try:
-        b_inv, _ = torch.solve(eye, b_mat)
+        # b_inv, _ = torch.solve(eye, b_mat)
+        b_inv = torch.linalg.solve(b_mat, eye) # torch.solve is moved to torch.linalg solve
+
     except:
         b_inv = eye
     return b_inv
@@ -136,9 +139,9 @@ def ransac_voting_layer_v3(mask, vertex, round_hyp_num, inlier_thresh=0.999, con
             selection = torch.zeros(cur_mask.shape, dtype=torch.float32, device=mask.device).uniform_(0, 1)
             selected_mask = (selection < (max_num / foreground_num.float())).byte()
             cur_mask *= selected_mask
-
         coords = torch.nonzero(cur_mask).float()  # [tn,2]
         coords = coords[:, [1, 0]]
+        cur_mask = cur_mask.to(torch.bool)
         direct = vertex[bi].masked_select(torch.unsqueeze(torch.unsqueeze(cur_mask, 2), 3))  # [tn,vn,2]
         direct = direct.view([coords.shape[0], vn, 2])
         tn = coords.shape[0]

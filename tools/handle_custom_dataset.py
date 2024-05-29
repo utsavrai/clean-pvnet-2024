@@ -54,7 +54,8 @@ def record_ann(model_meta, img_id, ann_id, images, annotations):
     inds = range(len(os.listdir(rgb_dir)))
 
     for ind in tqdm.tqdm(inds):
-        rgb_path = os.path.join(rgb_dir, '{}.jpg'.format(ind))
+        ind = ind+1
+        rgb_path = os.path.join(rgb_dir, '{}.png'.format(ind))
 
         rgb = Image.open(rgb_path)
         img_size = rgb.size
@@ -62,7 +63,7 @@ def record_ann(model_meta, img_id, ann_id, images, annotations):
         info = {'file_name': rgb_path, 'height': img_size[1], 'width': img_size[0], 'id': img_id}
         images.append(info)
 
-        pose_path = os.path.join(pose_dir, 'pose{}.npy'.format(ind))
+        pose_path = os.path.join(pose_dir, '{}.npy'.format(ind))
         pose = np.load(pose_path)
         corner_2d = base_utils.project(corner_3d, K, pose)
         center_2d = base_utils.project(center_3d[None], K, pose)[0]
@@ -77,7 +78,7 @@ def record_ann(model_meta, img_id, ann_id, images, annotations):
         anno.update({'fps_3d': fps_3d.tolist(), 'fps_2d': fps_2d.tolist()})
         anno.update({'K': K.tolist(), 'pose': pose.tolist()})
         anno.update({'data_root': rgb_dir})
-        anno.update({'type': 'real', 'cls': 'cat'})
+        anno.update({'type': 'real', 'cls': 'lnd'})
         annotations.append(anno)
 
     return img_id, ann_id
@@ -108,7 +109,7 @@ def custom_to_coco(data_root):
     annotations = []
 
     img_id, ann_id = record_ann(model_meta, img_id, ann_id, images, annotations)
-    categories = [{'supercategory': 'none', 'id': 1, 'name': 'cat'}]
+    categories = [{'supercategory': 'none', 'id': 1, 'name': 'lnd'}]
     instance = {'images': images, 'annotations': annotations, 'categories': categories}
 
     anno_path = os.path.join(data_root, 'train.json')

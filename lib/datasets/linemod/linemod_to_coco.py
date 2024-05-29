@@ -76,7 +76,7 @@ def record_occ_ann(model_meta, img_id, ann_id, images, annotations):
     fps_3d = model_meta['fps_3d']
     K = model_meta['K']
 
-    inds = np.loadtxt(os.path.join('data/linemod', cls, 'test_occlusion.txt'), np.str)
+    inds = np.loadtxt(os.path.join('data/linemod', cls, 'test_occlusion.txt'), dtype=str)
     inds = [int(os.path.basename(ind).replace('.jpg', '')) for ind in inds]
 
     rgb_dir = os.path.join(data_root, 'RGB-D/rgb_noseg')
@@ -130,7 +130,7 @@ def record_real_ann(model_meta, img_id, ann_id, images, annotations):
     pose_dir = os.path.join(data_root, cls, 'pose')
     rgb_dir = os.path.join(data_root, cls, 'JPEGImages')
 
-    inds = np.loadtxt(os.path.join(data_root, cls, split + '.txt'), np.str)
+    inds = np.loadtxt(os.path.join(data_root, cls, split + '.txt'), dtype=str)
     inds = [int(os.path.basename(ind).replace('.jpg', '')) for ind in inds]
 
     for ind in tqdm.tqdm(inds):

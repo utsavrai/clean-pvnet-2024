@@ -17,7 +17,7 @@ diameters = {
     'phone': 20.8394
 }
 
-linemod_cls_names = ['ape', 'cam', 'cat', 'duck', 'glue', 'iron', 'phone', 'benchvise', 'can', 'driller', 'eggbox', 'holepuncher', 'lamp']
+linemod_cls_names = ['ape', 'cam', 'cat', 'duck', 'glue', 'iron', 'phone', 'benchvise', 'can', 'driller', 'eggbox', 'holepuncher', 'lamp', 'lnd']
 
 linemod_K = np.array([[572.4114, 0., 325.2611],
                   [0., 573.57043, 242.04899],

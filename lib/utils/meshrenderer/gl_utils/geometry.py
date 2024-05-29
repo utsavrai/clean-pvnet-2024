@@ -1,24 +1,103 @@
+# # -*- coding: utf-8 -*-
+# import os
+# import numpy as np
+# import hashlib
+
+# import pyassimp
+# import pyassimp.postprocess
+# import progressbar
+
+
+
+# def load(filename):
+#     scene = pyassimp.load(filename, processing=pyassimp.postprocess.aiProcess_GenUVCoords|pyassimp.postprocess.aiProcess_Triangulate )
+#     mesh = scene.meshes[0]
+#     return mesh.vertices, mesh.normals, mesh.texturecoords[0,:,:2]
+
+# def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=False):
+#     from . import inout
+#     hashed_file_name = hashlib.md5((''.join(obj_files) + 'load_meshes_sixd' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
+
+#     out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
+#     if os.path.exists(out_file):
+#         return np.load(out_file)
+#     else:
+#         bar = progressbar.ProgressBar()
+#         attributes = []
+#         for model_path in bar(obj_files):
+#             model = inout.load_ply(model_path)
+#             vertices = np.array(model['pts'] ).astype(np.float32)
+#             if recalculate_normals:
+#                 normals = calc_normals(vertices)
+#             else:
+#                 normals = np.array(model['normals']).astype(np.float32)
+#             faces = np.array(model['faces']).astype(np.uint32)
+#             if 'colors' in model:
+#                 colors = np.array(model['colors']).astype(np.uint32)
+#                 attributes.append( (vertices, normals, colors, faces) )
+#             else:
+#                 attributes.append( (vertices, normals, faces) )
+#         np.save(out_file, attributes)
+#         return attributes
+
+
+# def load_meshes(obj_files, vertex_tmp_store_folder, recalculate_normals=False):
+#     hashed_file_name = hashlib.md5(( ''.join(obj_files) + 'load_meshes' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
+
+#     out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
+#     if os.path.exists(out_file):
+#         return np.load(out_file)
+#     else:
+#         bar = progressbar.ProgressBar()
+#         attributes = []
+#         for model_path in bar(obj_files):
+
+#             scene = pyassimp.load(model_path, pyassimp.postprocess.aiProcess_Triangulate)
+#             mesh = scene.meshes[0]
+#             vertices = mesh.vertices
+#             normals = calc_normals(vertices) if recalculate_normals else mesh.normals
+#             attributes.append( (vertices, normals) )
+#             pyassimp.release(scene)
+#         np.save(out_file, attributes)
+#         return attributes
+
+# def calc_normals(vertices):
+#     normals = np.empty_like(vertices)
+#     N = vertices.shape[0]
+#     for i in range(0, N-1, 3):
+#         v1 = vertices[i]
+#         v2 = vertices[i+1]
+#         v3 = vertices[i+2]
+#         normal = np.cross(v2-v1, v3-v1)
+#         norm = np.linalg.norm(normal)
+#         normal = np.zeros(3) if norm == 0 else normal / norm;
+#         normals[i] = normal
+#         normals[i+1] = normal
+#         normals[i+2] = normal
+#     return normals
+
 # -*- coding: utf-8 -*-
 import os
 import numpy as np
 import hashlib
-
 import pyassimp
+import pyassimp.errors
 import pyassimp.postprocess
 import progressbar
 
-
-
 def load(filename):
-    scene = pyassimp.load(filename, processing=pyassimp.postprocess.aiProcess_GenUVCoords|pyassimp.postprocess.aiProcess_Triangulate )
-    mesh = scene.meshes[0]
-    return mesh.vertices, mesh.normals, mesh.texturecoords[0,:,:2]
+    try:
+        with pyassimp.load(filename, processing=pyassimp.postprocess.aiProcess_GenUVCoords | pyassimp.postprocess.aiProcess_Triangulate) as scene:
+            mesh = scene.meshes[0]
+            return mesh.vertices, mesh.normals, mesh.texturecoords[0, :, :2]
+    except pyassimp.errors.AssimpError as e:
+        raise RuntimeError(f"Failed to load model file {filename}: {e}")
 
-def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=False):
+def load_meshes_sixd(obj_files, vertex_tmp_store_folder, recalculate_normals=False):
     from . import inout
     hashed_file_name = hashlib.md5((''.join(obj_files) + 'load_meshes_sixd' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
 
-    out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
+    out_file = os.path.join(vertex_tmp_store_folder, hashed_file_name)
     if os.path.exists(out_file):
         return np.load(out_file)
     else:
@@ -26,7 +105,7 @@ def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=F
         attributes = []
         for model_path in bar(obj_files):
             model = inout.load_ply(model_path)
-            vertices = np.array(model['pts'] ).astype(np.float32)
+            vertices = np.array(model['pts']).astype(np.float32)
             if recalculate_normals:
                 normals = calc_normals(vertices)
             else:
@@ -34,46 +113,52 @@ def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=F
             faces = np.array(model['faces']).astype(np.uint32)
             if 'colors' in model:
                 colors = np.array(model['colors']).astype(np.uint32)
-                attributes.append( (vertices, normals, colors, faces) )
+                attributes.append((vertices, normals, colors, faces))
             else:
-                attributes.append( (vertices, normals, faces) )
+                attributes.append((vertices, normals, faces))
         np.save(out_file, attributes)
         return attributes
 
-
 def load_meshes(obj_files, vertex_tmp_store_folder, recalculate_normals=False):
-    hashed_file_name = hashlib.md5(( ''.join(obj_files) + 'load_meshes' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
+    hashed_file_name = hashlib.md5((''.join(obj_files) + 'load_meshes' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
 
-    out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
+    out_file = os.path.join(vertex_tmp_store_folder, hashed_file_name)
     if os.path.exists(out_file):
         return np.load(out_file)
     else:
         bar = progressbar.ProgressBar()
         attributes = []
         for model_path in bar(obj_files):
+            try:
+                print(f"Loading model from {model_path}")
+                with pyassimp.load(model_path, pyassimp.postprocess.aiProcess_Triangulate) as scene:
+                    print(f"Scene loaded: {scene}")
+                    if scene.meshes:
+                        mesh = scene.meshes[0]
+                        vertices = mesh.vertices
+                        normals = calc_normals(vertices) if recalculate_normals else mesh.normals
+                        attributes.append((vertices, normals))
+                    else:
+                        raise RuntimeError(f"No meshes found in the model file {model_path}")
+            except pyassimp.errors.AssimpError as e:
+                raise RuntimeError(f"Failed to load model file {model_path}: {e}")
 
-            scene = pyassimp.load(model_path, pyassimp.postprocess.aiProcess_Triangulate)
-            mesh = scene.meshes[0]
-            vertices = mesh.vertices
-            normals = calc_normals(vertices) if recalculate_normals else mesh.normals
-            attributes.append( (vertices, normals) )
-            pyassimp.release(scene)
         np.save(out_file, attributes)
         return attributes
 
 def calc_normals(vertices):
     normals = np.empty_like(vertices)
     N = vertices.shape[0]
-    for i in range(0, N-1, 3):
+    for i in range(0, N - 1, 3):
         v1 = vertices[i]
-        v2 = vertices[i+1]
-        v3 = vertices[i+2]
-        normal = np.cross(v2-v1, v3-v1)
+        v2 = vertices[i + 1]
+        v3 = vertices[i + 2]
+        normal = np.cross(v2 - v1, v3 - v1)
         norm = np.linalg.norm(normal)
-        normal = np.zeros(3) if norm == 0 else normal / norm;
+        normal = np.zeros(3) if norm == 0 else normal / norm
         normals[i] = normal
-        normals[i+1] = normal
-        normals[i+2] = normal
+        normals[i + 1] = normal
+        normals[i + 2] = normal
     return normals
 
 # src: https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/6.pbr/2.2.2.ibl_specular_textured/ibl_specular_textured.cpp
